@@ -14,7 +14,7 @@ sx = symbols('x')
 
 def general_dist():
     x_pk_abs=1.875
-    pds_p=pd.read_excel('распределение Аштрих.xlsx',index_col=0)
+    pds_p=pd.read_excel('распределение Аштрих для distribution_lib.xlsx',index_col=0)
 
     z=[]
     p=pds_p['height'].fillna(0)

@@ -19,11 +19,13 @@ from scipy.interpolate import LinearNDInterpolator
 # In[18]:
 
 
-def MakingSurface(dis_p, file_straps_cord, workbook):
+def MakingSurface(file_straps_cord, workbook):
+    #(file_straps_cord - имя файла с кооринатами лямок, workbook - имя файла с распределениями и шаблонами для записи)
     
-    "Распределение давлений в A'"
+    sheet_names = pd.ExcelFile(workbook).sheet_names
+    dis_p = pd.read_excel(workbook, sheet_name=sheet_names[0], index_col=0)
+    
     """Верхняя часть"""
-    #dis_p = pd.read_excel('распределение Аштрих.xlsx', sheet_name='Распр_P_По_хордам', index_col=0)
 
     dis_p_data = [[[], []] for _ in range(int((len(dis_p.columns)-1)/2))]
 
@@ -31,29 +33,29 @@ def MakingSurface(dis_p, file_straps_cord, workbook):
 
     """Запись z сечений"""
     z_list = dis_p['z, м'].tolist()
-    z_list = [x for x in z_list[0:14] if str(x) != 'nan']
+    z_list = [x for x in z_list if str(x) != 'nan']
 
     """Запись X"""
-    list_dis_p_x = dis_p.iloc[:, 0:28:2].values.tolist()
+    list_dis_p_x = dis_p.iloc[:, 0:(len(z_list)*2):2].values.tolist()
     for i in range(len(list_dis_p_x[0])):
         for j in range(len(list_dis_p_x)):
             dis_p_data[i][0].append(list_dis_p_x[j][i])
 
     """Запись p"""
-    list_dis_p = dis_p.iloc[:, 1:28:2].values.tolist()
+    list_dis_p = dis_p.iloc[:, 1:(len(z_list)*2):2].values.tolist()
     for i in range(len(list_dis_p[0])):
         for j in range(len(list_dis_p)):
             dis_p_data[i][1].append(list_dis_p[j][i])
 
+    num_points_sec = int(len([x for x in dis_p.iloc[:, 0].values.tolist() if str(x) != 'nan'])/2) #the number of points in the section
+            
     for i in range(len(z_list)):
-        for j in range(20):
+        for j in range(num_points_sec):
             x.append(list_dis_p_x[j][i])
             z.append(z_list[i])
             p.append(list_dis_p[j][i])
 
-    #p = [i*(-1) for i in p]
-
-    X = np.linspace(min(x), max(x), num=20)
+    X = np.linspace(min(x), max(x), num=num_points_sec)
     Z = np.linspace(min(z), max(z), num=int((max(z)-min(z))*1000))
     X, Z = np.meshgrid(X, Z)
     # Interpolate the z values on the meshgrid
@@ -67,7 +69,7 @@ def MakingSurface(dis_p, file_straps_cord, workbook):
     plt.axis("equal")
     plt.show()
 
-    straps_cord = pd.read_excel(file_straps_cord, sheet_name='Общая картина', index_col=0)
+    straps_cord = pd.read_excel(file_straps_cord, sheet_name=pd.ExcelFile(file_straps_cord).sheet_names[0], index_col=0)
 
     z_centre = list(straps_cord.loc['Координаты по Z:'])
     z_centre = [z_centre[i]/1000 for i in range(len(z_centre))]
@@ -87,123 +89,70 @@ def MakingSurface(dis_p, file_straps_cord, workbook):
     for i in range(len(z_centre)):
         for j in range(len(Z)):
             if round(z_centre[i]*1000)==round(Z[j][0]*1000):
-                for k in range(20):
+                for k in range(num_points_sec):
                     x_s.append(X[j][k])
                     z_s.append(z_centre[i])
                     p_s.append(P[j][k])
 
-    # Открываем Excel файл
-    #workbook = openpyxl.load_workbook('распределение Аштрих.xlsx')
-
     # Выбираем нужный лист
-    worksheet = workbook['Распределение_по_сеч_с_лямками']
+    wb = openpyxl.load_workbook(workbook)
+    worksheet = wb[sheet_names[1]]
 
     for i in range(len(z_centre)):
         c = worksheet.cell(row=1, column=(2*i)+2)
         c.value = "x=" + str(z_centre[i])
         c = worksheet.cell(row=1, column=(2*i+1)+2)
         c.value = "p=" + str(z_centre[i])
-        for j in range(20):
+        for j in range(num_points_sec):
             c = worksheet.cell(row=j+2, column=(2*i)+2)
-            c.value = x_s[i*20+j]
+            c.value = x_s[i*num_points_sec+j]
             c = worksheet.cell(row=j+2, column=(2*i+1)+2)
-            c.value = p_s[i*20+j]
-
-    z_type = pd.read_excel(file_straps_cord, sheet_name='Кессон', index_col=0)
-
-    z_type_list = list(z_type.loc['Координаты по Z:'])
-    z_type_list = [z_type_list[i]/1000 for i in range(len(z_type_list))]
-
-    # Выбираем нужный лист
-    worksheet_kes = workbook['Кессон']
-
-    for i in range(len(z_centre)):
-        for k in range(len((z_type_list))):
-            if z_type_list[k]==z_centre[i]:
-                c = worksheet_kes.cell(row=1, column=(2*i)+2)
-                c.value = z_type_list[k]
-                c = worksheet_kes.cell(row=1, column=(2*i+1)+2)
-                c.value = z_type_list[k]
-                for j in range(20):
-                    c = worksheet_kes.cell(row=j+2, column=(2*i)+2)
-                    c.value = x_s[i*20+j]
-                    c = worksheet_kes.cell(row=j+2, column=(2*i+1)+2)
-                    c.value = p_s[i*20+j]
-
-    z_type = pd.read_excel(file_straps_cord, sheet_name='Закрылок', index_col=0)
-
-    z_type_list = list(z_type.loc['Координаты по Z:'])
-    z_type_list = [z_type_list[i]/1000 for i in range(len(z_type_list))]
-
-    # Выбираем нужный лист
-    worksheet_zakr = workbook['Закрылок']
-
-    for i in range(len(z_centre)):
-        for k in range(len((z_type_list))):
-            if z_type_list[k]==z_centre[i]:
-                c = worksheet_zakr.cell(row=1, column=(2*i)+2)
-                c.value = z_type_list[k]
-                c = worksheet_zakr.cell(row=1, column=(2*i+1)+2)
-                c.value = z_type_list[k]
-                for j in range(20):
-                    c = worksheet_zakr.cell(row=j+2, column=(2*i)+2)
-                    c.value = x_s[i*20+j]
-                    c = worksheet_zakr.cell(row=j+2, column=(2*i+1)+2)
-                    c.value = p_s[i*20+j]
-
-    z_type = pd.read_excel(file_straps_cord, sheet_name='Элерон', index_col=0)
-
-    z_type_list = list(z_type.loc['Координаты по Z:'])
-    z_type_list = [z_type_list[i]/1000 for i in range(len(z_type_list))]
-
-    # Выбираем нужный лист
-    worksheet_eler = workbook['Элерон']
-
-    for i in range(len(z_centre)):
-        for k in range(len((z_type_list))):
-            if z_type_list[k]==z_centre[i]:
-                c = worksheet_eler.cell(row=1, column=(2*i)+2)
-                c.value = z_type_list[k]
-                c = worksheet_eler.cell(row=1, column=(2*i+1)+2)
-                c.value = z_type_list[k]
-                for j in range(20):
-                    c = worksheet_eler.cell(row=j+2, column=(2*i)+2)
-                    c.value = x_s[i*20+j]
-                    c = worksheet_eler.cell(row=j+2, column=(2*i+1)+2)
-                    c.value = p_s[i*20+j]
+            c.value = p_s[i*num_points_sec+j]
+    
+    for l in range(2, len(sheet_names)):
+        z_type = pd.read_excel(file_straps_cord, sheet_name=sheet_names[l], index_col=0)
+        z_type_list = list(z_type.loc['Координаты по Z:'])
+        z_type_list = [z_type_list[i]/1000 for i in range(len(z_type_list))]
+        # Выбираем нужный лист
+        worksheet = wb[sheet_names[l]]
+        for i in range(len(z_centre)):
+            for k in range(len((z_type_list))):
+                if z_type_list[k]==z_centre[i]:
+                    c = worksheet.cell(row=1, column=(2*i)+2)
+                    c.value = z_type_list[k]
+                    c = worksheet.cell(row=1, column=(2*i+1)+2)
+                    c.value = z_type_list[k]
+                    for j in range(num_points_sec):
+                        c = worksheet.cell(row=j+2, column=(2*i)+2)
+                        c.value = x_s[i*num_points_sec+j]
+                        c = worksheet .cell(row=j+2, column=(2*i+1)+2)
+                        c.value = p_s[i*num_points_sec+j]
 
     """Нижняя часть"""
-
+     
     dis_p_data = [[[], []] for _ in range(int((len(dis_p.columns)-1)/2))]
 
     x, z, p =[], [], []
 
     """Запись X"""
-    list_dis_p_x = dis_p.iloc[:, 0:28:2].values.tolist()
+    list_dis_p_x = dis_p.iloc[:, 0:(len(z_list)*2):2].values.tolist()
     for i in range(len(list_dis_p_x[0])):
         for j in range(len(list_dis_p_x)):
             dis_p_data[i][0].append(list_dis_p_x[j][i])
 
     """Запись p"""
-    list_dis_p = dis_p.iloc[:, 1:28:2].values.tolist()
+    list_dis_p = dis_p.iloc[:, 1:(len(z_list)*2):2].values.tolist()
     for i in range(len(list_dis_p[0])):
         for j in range(len(list_dis_p)):
             dis_p_data[i][1].append(list_dis_p[j][i])
-
+            
     for i in range(len(z_list)):
-        for j in range(20, 40):
+        for j in range(num_points_sec, num_points_sec*2):
             x.append(list_dis_p_x[j][i])
             z.append(z_list[i])
             p.append(list_dis_p[j][i])
 
-    #p = [i*(-1) for i in p]
-
-    data_for_spline = [[] for i in range(len(x))]
-    for i in range(len(x)):
-        data_for_spline[i].append(x[i])
-        data_for_spline[i].append(z[i])
-
-    X = np.linspace(min(x), max(x), num=20)
+    X = np.linspace(min(x), max(x), num=num_points_sec)
     Z = np.linspace(min(z), max(z), num=int((max(z)-min(z))*1000))
     X, Z = np.meshgrid(X, Z)
     # Interpolate the z values on the meshgrid
@@ -222,71 +171,37 @@ def MakingSurface(dis_p, file_straps_cord, workbook):
     for i in range(len(z_centre)):
         for j in range(len(Z)):
             if round(z_centre[i]*1000)==round(Z[j][0]*1000):
-                for k in range(20):
+                for k in range(num_points_sec):
                     x_s.append(X[j][k])
                     z_s.append(z_centre[i])
                     p_s.append(P[j][k])
-
+    
+    worksheet = wb[sheet_names[1]]
+    
     for i in range(len(z_centre)):
-        for j in range(20):
-            c = worksheet.cell(row=j+2+20, column=(2*i)+2)
-            c.value = x_s[i*20+j]
-            c = worksheet.cell(row=j+2+20, column=(2*i+1)+2)
-            c.value = p_s[i*20+j]
-
-    z_type = pd.read_excel(file_straps_cord, sheet_name='Кессон', index_col=0)
-
-    z_type_list = list(z_type.loc['Координаты по Z:'])
-    z_type_list = [z_type_list[i]/1000 for i in range(len(z_type_list))]
-
-    # Выбираем нужный лист
-    worksheet_kes = workbook['Кессон']
-
-    for i in range(len(z_centre)):
-        for k in range(len((z_type_list))):
-            if z_type_list[k]==z_centre[i]:
-                for j in range(20):
-                    c = worksheet_kes.cell(row=j+2+20, column=(2*i)+2)
-                    c.value = x_s[i*20+j]
-                    c = worksheet_kes.cell(row=j+2+20, column=(2*i+1)+2)
-                    c.value = p_s[i*20+j]
-
-    z_type = pd.read_excel(file_straps_cord, sheet_name='Закрылок', index_col=0)
-
-    z_type_list = list(z_type.loc['Координаты по Z:'])
-    z_type_list = [z_type_list[i]/1000 for i in range(len(z_type_list))]
-
-    # Выбираем нужный лист
-    worksheet_zakr = workbook['Закрылок']
-
-    for i in range(len(z_centre)):
-        for k in range(len((z_type_list))):
-            if z_type_list[k]==z_centre[i]:
-                for j in range(20):
-                    c = worksheet_zakr.cell(row=j+2+20, column=(2*i)+2)
-                    c.value = x_s[i*20+j]
-                    c = worksheet_zakr.cell(row=j+2+20, column=(2*i+1)+2)
-                    c.value = p_s[i*20+j]
-
-    z_type = pd.read_excel(file_straps_cord, sheet_name='Элерон', index_col=0)
-
-    z_type_list = list(z_type.loc['Координаты по Z:'])
-    z_type_list = [z_type_list[i]/1000 for i in range(len(z_type_list))]
-
-    # Выбираем нужный лист
-    worksheet_eler = workbook['Элерон']
-
-    for i in range(len(z_centre)):
-        for k in range(len((z_type_list))):
-            if z_type_list[k]==z_centre[i]:
-                for j in range(20):
-                    c = worksheet_eler.cell(row=j+2+20, column=(2*i)+2)
-                    c.value = x_s[i*20+j]
-                    c = worksheet_eler.cell(row=j+2+20, column=(2*i+1)+2)
-                    c.value = p_s[i*20+j]
+        for j in range(num_points_sec):
+            c = worksheet.cell(row=j+2+num_points_sec, column=(2*i)+2)
+            c.value = x_s[i*num_points_sec+j]
+            c = worksheet.cell(row=j+2+num_points_sec, column=(2*i+1)+2)
+            c.value = p_s[i*num_points_sec+j]
+    
+    for l in range(2, len(sheet_names)):
+        z_type = pd.read_excel(file_straps_cord, sheet_name=sheet_names[l], index_col=0)
+        z_type_list = list(z_type.loc['Координаты по Z:'])
+        z_type_list = [z_type_list[i]/1000 for i in range(len(z_type_list))]
+        # Выбираем нужный лист
+        worksheet = wb[sheet_names[l]]
+        for i in range(len(z_centre)):
+            for k in range(len((z_type_list))):
+                if z_type_list[k]==z_centre[i]:
+                    for j in range(num_points_sec):
+                        c = worksheet.cell(row=j+2+num_points_sec, column=(2*i)+2)
+                        c.value = x_s[i*num_points_sec+j]
+                        c = worksheet.cell(row=j+2+num_points_sec, column=(2*i+1)+2)
+                        c.value = p_s[i*num_points_sec+j]
 
     # Сохраняем изменения в файле
-    workbook.save('Распределение_давлений_по_хордам_с_лямками_Аштрих.xlsx')
+    wb.save('Распределение_давлений_по_хордам_с_лямками_Аштрих.xlsx')
 
 
 # In[ ]:

@@ -1,0 +1,24 @@
+LeverSystemForce_Library.py:
+mapping - полином 3 порядка
+abscissa_graduation - разлиновка абсциссы для сплайна
+check - проверяет наличие символа в строке (сделано для проверки значений на мнимость)
+spline_force - создание функции сплайна + создание ординат сплайна на основе abscissa_graduation
+uni_delta_z_func - метод трапеций, иными словами поиск границы площади давления по одной из границ и ЦД
+
+distribution_lib.py:
+
+
+surf_func.py:
+MakingSurface - построение поверхности на основе распределения давлений
+
+Qy_Mz_functions.py:
+
+
+mass_distribution.py:
+mass_distribution_func - Получаем распределение массы и ее ЦМ по размаху
+
+center_force.py:
+center_from_mass_dist - поиск распределения центра масс по элементу на основе дискретных ЦМ в этом эл-те
+center_force_func - поиск центра приложения силы, на основе ее распределения
+sum_Qy - поиск суммарного Qy
+sum_Mz - поиск суммарного Mz
