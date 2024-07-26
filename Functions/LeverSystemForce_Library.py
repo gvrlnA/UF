@@ -34,7 +34,6 @@ def spline_force(abscissa, ordinate, degree):
     return spline_ordinate, spl_ordinate
 
 def uni_delta_z_func(z_elem, hy_elem, file_name, sheet_name, z_inf, z_sup):
-    """Считаем delta_z на закрылок"""
     spline_ordinate, pressure_distribution = spline_force(z_elem, hy_elem, 1) #строим сплайн по размаху
 
     #оставляем только положительную часть давления

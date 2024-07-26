@@ -17,40 +17,26 @@ import pandas as pd
 sx = symbols('x')
 
 
-def center_from_mass_dist(dist_cm_element_z, dist_cm_element_x, dist_cm_element_m, xl_element):
-    cm_z, cm_x, cm_m = [], [], []
-    for i in range(len(dist_cm_element_z)):
+def center_from_mass_dist(dist_cm_element_ord, dist_cm_element_absc, dist_cm_element_m, xl_element):
+    cm_ord, cm_absc, cm_m = [], [], []
+    for i in range(len(dist_cm_element_ord)):
         for j in range(len(xl_element)):
-            if round(dist_cm_element_z[i], 3)==round(float(xl_element[j]), 3):
-                cm_z.append(dist_cm_element_z[i])
-                cm_x.append(dist_cm_element_x[i])
+            if round(dist_cm_element_ord[i], 3)==round(float(xl_element[j]), 3):
+                cm_ord.append(dist_cm_element_ord[i])
+                cm_absc.append(dist_cm_element_absc[i])
                 cm_m.append(dist_cm_element_m[i])
-    return cm_z, cm_x, cm_m
+    return cm_ord, cm_absc, cm_m
 
 
 # In[3]:
 
 
 def center_force_func(grad_F):
-    """
-    if i==0: #крыло
-        x_start = 1.875
-        x_finish = x_start + 2.0# - 0.743
-    if i==1: #элерон
-        x_finish = 1.875 + 2.0
-        x_start = x_finish - 0.516
-    if i==2: #закрылок
-        x_finish = 1.875 + 2.0
-        x_start = x_finish - 0.254
-    """
+
     center_of_force = []
 
     for i in range(len(grad_F)): 
-        """
-        for j in range(len(grad_F[i][1])-1, -1, -1):
-            if (grad_F[i][1][j]<x_start) or (grad_F[i][1][j]>x_finish):
-                grad_F[i][1].pop(j)
-        """
+
         # Загрузка данных из криволинейного графика приложения силы (x - координата, y - значение силы)
         x = lsfl.abscissa_graduation([grad_F[i][1][0], grad_F[i][1][len(grad_F[i][1])-1]])
         y = []
