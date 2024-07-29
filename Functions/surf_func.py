@@ -74,16 +74,6 @@ def MakingSurface(file_straps_cord, workbook):
     z_centre = list(straps_cord.loc['Координаты по Z:'])
     z_centre = [z_centre[i]/1000 for i in range(len(z_centre))]
 
-    #horda kryla
-    sz = symbols('z')
-    PK=[0.824, 0.0, 0.0, 0.0, 0.0, 0.824]
-    z_PK=[-8.27, -4.558, -0.78, 0.78, 4.558, 8.27]
-    BK=[1.824, 2.0, 2.0, 2.0, 2.0, 1.824]
-    z_BK=[-8.27, -5.27, -0.78, 0.78,5.27,8.27]
-    spl_PK=interpolating_spline(1, sz, z_PK, PK)
-    spl_BK=interpolating_spline(1, sz, z_BK, BK)
-    b = interpolating_spline(1, sz, z_BK, BK)-interpolating_spline(1, sz, z_PK, PK)
-
     x_s, z_s, p_s = [], [], []
 
     for i in range(len(z_centre)):
