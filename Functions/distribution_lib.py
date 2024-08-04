@@ -26,13 +26,13 @@ def general_dist():
     b=[v for k,v in enumerate(list_name) if not k%2]
     c=[v for k,v in enumerate(list_name) if k%2]
 
-    for i in range(len(c)-1):
-        plt.plot(pds_p[c[i+1]][:z[1]], pds_p[b[i+2]][:z[1]])
-        plt.plot(pds_p[c[i+1]][z[1]:], pds_p[b[i+2]][z[1]:])
-    plt.grid()
-    plt.xlabel("x")
-    plt.ylabel("p")
-    plt.show()
+    #for i in range(len(c)-1):
+    #    plt.plot(pds_p[c[i+1]][:z[1]], pds_p[b[i+2]][:z[1]])
+    #    plt.plot(pds_p[c[i+1]][z[1]:], pds_p[b[i+2]][z[1]:])
+    #plt.grid()
+    #plt.xlabel("x")
+    #plt.ylabel("p")
+    #plt.show()
 
     hy=[]
     spl_up, spl_down = [], []
