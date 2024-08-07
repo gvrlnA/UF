@@ -14,6 +14,8 @@ from scipy.integrate import simps
 from sympy import *
 from sympy import symbols
 import pandas as pd
+import openpyxl
+from openpyxl import Workbook
 
 
 # In[ ]:
@@ -33,6 +35,9 @@ def force_on_straps(sum_Qy, sum_Mz, name_of_element, percent_rigid_ax, delta_ord
     ordi_center = list(straps_cord.loc[section_ax_name])
     ordi_center = [ordi_center[i] for i in range(len(ordi_center))]
     #ordi_center = [ordi_center[i]/1000 for i in range(len(ordi_center))]
+    wb = openpyxl.load_workbook('File_for_result.xlsx')
+    worksheet = wb['Лист1']
+    start_line = 1
     for i in range(len(ordi_center)):
         print(i)
         straps_cord_absc = straps_cord.iloc[1:, i].tolist()
@@ -70,6 +75,23 @@ def force_on_straps(sum_Qy, sum_Mz, name_of_element, percent_rigid_ax, delta_ord
             print('Проверка: ', check)
             print('Погрешность %: ', [((np.dot(A[i], F)/b[i])-1)*100 for i in range(len(check))])
             print(F)
+            c = worksheet.cell(row=start_line, column = 1)
+            c.value = 'Координата в мм:'
+            c = worksheet.cell(row=start_line, column = 2)
+            c.value = ordi_center[i]
+            c = worksheet.cell(row=start_line+1, column = 1)
+            c.value = 'Усилия в кгс:'
+            start_column = 2
+            for j in range(len(F)):
+                c = worksheet.cell(row=start_line+1, column = start_column)
+                c.value = F[j]
+                start_column += 1
+            c = worksheet.cell(row=start_line+2, column = 1)
+            c.value = 'Погрешность в %:'
+            c = worksheet.cell(row=start_line+2, column = 2)
+            c.value = str([((np.dot(A[i], F)/b[i])-1)*100 for i in range(len(check))])
+            start_line += 4
         else:
             continue
+    wb.save("result.xlsx")
     return F, check
