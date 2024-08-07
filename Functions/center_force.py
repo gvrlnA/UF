@@ -67,26 +67,20 @@ def sum_Qy(cm_m, Qy):
 
 # In[5]:
 
-def sum_Mz(Mz, center_of_force, cm_m, name_of_element):
+def sum_Mz(Mz, center_of_force, cm_m, name_of_element, percent_rigid_ax, delta_ordi, PK, BK, section_ax_name, file_straps_cord):
     sz=symbols('z')
-    PK=[0.824, 0.0, 0.0, 0.0, 0.0, 0.824]
-    z_PK=[-8.27, -4.558, -0.78, 0.78, 4.558, 8.27]
-    BK=[1.824, 2.0, 2.0, 2.0, 2.0, 1.824]
-    z_BK=[-8.27, -5.27, -0.78, 0.78, 5.27, 8.27]
-    spl_PK=interpolating_spline(1, sz, z_PK, PK)
-    spl_BK=interpolating_spline(1, sz, z_BK, BK)
-    b_hor = interpolating_spline(1, sz, z_BK, BK)-interpolating_spline(1, sz, z_PK, PK)
-    str_ax=0.275
-    spl_str=spl_PK+str_ax*b_hor+1.88
+    spl_str = PK + percent_rigid_ax * (BK - PK) + delta_ordi
     
-    straps_cord = pd.read_excel('Координаты лямок.xlsx', sheet_name=name_of_element, index_col=0)
-    z_center = list(straps_cord.loc['Координаты по Z:'])
-    z_center = [z_center[i]/1000 for i in range(len(z_center))]
+    straps_cord = pd.read_excel(file_straps_cord, sheet_name=name_of_element, index_col=0)
+    ordi_center = list(straps_cord.loc[section_ax_name])
     str_ax_in_section = []
-    for i in range(len(z_center)):
-        str_ax_in_section.append(spl_str.subs(sz, z_center[i]))
-    sum_Mz = np.array(Mz) + (np.array(center_of_force) - np.array(str_ax_in_section))*np.array(cm_m)*(-1) 
+    for i in range(len(ordi_center)):
+        #str_ax_in_section.append(PK.subs(sz, ordi_center[i]) + percent_rigid_ax*(BK.subs(sz, ordi_center[i]) - PK.subs(sz, ordi_center[i])) + delta_ordi)
+        str_ax_in_section.append(spl_str.subs(sz, ordi_center[i]))
+    sum_Mz = (np.array(Mz)*1000 + (np.array(center_of_force)*1000 - np.array(str_ax_in_section))*np.array(cm_m)*(-1))/1000
     return sum_Mz
+
+
 
 
 # In[ ]:
